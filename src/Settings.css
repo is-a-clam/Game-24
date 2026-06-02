@@ -1,0 +1,85 @@
+.options-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.options-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+}
+
+.options-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 360px);
+  min-height: 100svh;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-lg);
+  box-sizing: border-box;
+  border-left: 1px solid var(--border);
+  color: var(--text);
+  background: var(--bg);
+  box-shadow: -16px 0 40px rgba(0, 0, 0, 0.16);
+}
+
+.options-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-md);
+}
+
+.settings-form {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.setting-field {
+  display: grid;
+  gap: var(--space-xs);
+  color: var(--text-h);
+  font-weight: 700;
+  text-align: left;
+}
+
+.setting-field input {
+  width: 100%;
+  min-height: var(--button-min-height);
+  padding: 0 var(--space-sm);
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-h);
+  background: var(--panel-bg);
+  font: inherit;
+}
+
+.settings-error {
+  color: var(--danger);
+  text-align: left;
+}
+
+.options-actions {
+  margin-top: auto;
+}
+
+.icon-button:focus-visible,
+.setting-field input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 520px) {
+  .options-panel {
+    width: min(100%, 320px);
+    padding: 20px;
+  }
+}

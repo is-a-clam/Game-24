@@ -1,0 +1,106 @@
+:root {
+  /* Layout and spacing tokens */
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 20px;
+  --max-content-width: 640px;
+  --tile-min: 120px;
+  --tile-max: 1fr;
+
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --panel-bg: #f8f8f9;
+  --panel-bg-hover: color-mix(in srgb, var(--panel-bg) 85%, black);
+  --border: #e5e4e7;
+  --accent: #aa3bff;
+  --accent-hover: color-mix(in srgb, var(--accent) 85%, black);
+  --danger: #b42318;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  /* Layout tokens */
+  --root-max-width: 1126px;
+  --content-max-width: 640px;
+
+  /* Spacing */
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 20px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Gaps */
+  --gap-sm: 8px;
+  --gap-md: 12px;
+  --gap-lg: 28px;
+
+  /* Tile sizing */
+  --tile-min-height: 64px;
+  --tile-max-height: 112px;
+
+  /* Controls */
+  --button-min-height: 48px;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0;
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #9ca3af;
+    --text-h: #f3f4f6;
+    --bg: #16171d;
+    --panel-bg: #1f2028;
+    --panel-bg-hover: color-mix(in srgb, var(--panel-bg) 85%, white);
+    --border: #2e303a;
+    --accent: #c084fc;
+    --accent-hover: color-mix(in srgb, var(--accent) 85%, white);
+    --danger: #f97066;
+  }
+}
+
+#root {
+  width: 1126px;
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2 {
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+h2 {
+  font-size: 24px;
+  line-height: 118%;
+  margin: 0 0 8px;
+  @media (max-width: 1024px) {
+    font-size: 20px;
+  }
+}
+p {
+  margin: 0;
+}
