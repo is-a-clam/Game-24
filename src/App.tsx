@@ -63,6 +63,10 @@ export default function App() {
         <IoSettings />
       </button>
 
+      <footer className='credits' aria-hidden='true'>
+        Created by Isaac Lam
+      </footer>
+
       <section className='game-view' aria-label='24 Game'>
         <div className='number-grid' aria-label='Current puzzle numbers'>
           {(puzzle?.numbers ?? Array(4).fill('')).map((number, index) => (

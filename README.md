@@ -2,6 +2,8 @@
 
 Game 24 is a minimal Progressive Web App (PWA) that generates solvable "24 Game" puzzles: four numbers between 1 and 13 that can be combined with arithmetic to make 24. The app is implemented with React + TypeScript, built with Vite, and configured for offline usage via service workers.
 
+It is current hosted [here](https://game-24.pages.dev).
+
 Key features
 
 - Generates only puzzles that have at least one valid solution.
