@@ -16,16 +16,31 @@ type SettingsProps = {
 }
 
 export default function Settings(props: SettingsProps) {
+  const [isRendered, setIsRendered] = useState(props.isOpen)
+  const [isVisible, setIsVisible] = useState(false)
+
   const [draftSettings, setDraftSettings] = useState<PuzzleSettings>(props.settings)
   const [settingsError, setSettingsError] = useState<string | null>(null)
   const firstInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     if (props.isOpen) {
+      setIsRendered(true)
+      setIsVisible(false)
+
       setDraftSettings(props.settings)
       setSettingsError(null)
-      // Focus the first input for keyboard users when the panel opens
-      requestAnimationFrame(() => firstInputRef.current?.focus())
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setIsVisible(true)
+          firstInputRef.current?.focus()
+        })
+      })
+    } else {
+      setIsVisible(false)
+      const timeout = window.setTimeout(() => setIsRendered(false), 250)
+      return () => window.clearTimeout(timeout)
     }
   }, [props.isOpen])
 
@@ -47,10 +62,10 @@ export default function Settings(props: SettingsProps) {
     props.onClose()
   }
 
-  if (!props.isOpen) return null
+  if (!isRendered) return null
 
   return (
-    <div className='options-layer' role='presentation'>
+    <div className={`options-layer ${isVisible ? 'is-open' : ''}`} role='presentation'>
       <button className='options-backdrop' type='button' aria-label='Close options' onClick={props.onClose} />
 
       <aside className='options-panel' role='dialog' aria-modal='true' aria-labelledby='options-title'>
