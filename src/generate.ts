@@ -37,7 +37,7 @@ export function generatePuzzle(options: GeneratePuzzleOptions = {}): GeneratedPu
     }
   }
 
-  throw new Error(`Could not generate a solvable puzzle after ${maxAttempts} attempts.`)
+  throw new Error(`No solvable puzzle exists.`)
 }
 
 function generateNumbers(count: number, min: number, max: number): number[] {

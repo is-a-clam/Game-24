@@ -3,6 +3,17 @@ import { IoSettings } from 'react-icons/io5'
 import './App.css'
 import { generatePuzzle, type GeneratedPuzzle } from './generate'
 import Settings, { type PuzzleSettings } from './Settings.tsx'
+import { usePersistentState } from './storage.ts'
+
+const APP_STATE_KEY = 'game24:app-state:v1'
+
+type PersistedAppState = {
+  version: 1
+  settings: PuzzleSettings
+  puzzle: GeneratedPuzzle | null
+  solutionsVisible: boolean
+  generationError: string | null
+}
 
 const DEFAULT_SETTINGS: PuzzleSettings = {
   target: 24,
@@ -10,17 +21,45 @@ const DEFAULT_SETTINGS: PuzzleSettings = {
   max: 13,
 }
 
-export default function App() {
-  const optionsButtonRef = useRef<HTMLButtonElement | null>(null)
-  const [puzzle, setPuzzle] = useState<GeneratedPuzzle | null>(null)
-  const [solutionsVisible, setSolutionsVisible] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generationError, setGenerationError] = useState<string | null>(null)
+const DEFAULT_PERSISTED_STATE: PersistedAppState = {
+  version: 1,
+  settings: DEFAULT_SETTINGS,
+  puzzle: null,
+  solutionsVisible: false,
+  generationError: null,
+}
 
-  const [settings, setSettings] = useState<PuzzleSettings>(DEFAULT_SETTINGS)
+export default function App() {
+  const [persistedState, setPersistedState] = usePersistentState<PersistedAppState>(
+    APP_STATE_KEY,
+    DEFAULT_PERSISTED_STATE,
+    { validate: isPersistedAppState },
+  )
+
+  const optionsButtonRef = useRef<HTMLButtonElement | null>(null)
+  const [puzzle, setPuzzle] = useState<GeneratedPuzzle | null>(persistedState.puzzle)
+  const [solutionsVisible, setSolutionsVisible] = useState(persistedState.solutionsVisible)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationError, setGenerationError] = useState<string | null>(persistedState.generationError)
+
+  const [settings, setSettings] = useState<PuzzleSettings>(persistedState.settings)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
-  useEffect(() => handleGeneratePuzzle(DEFAULT_SETTINGS), [])
+  useEffect(() => {
+    if (puzzle === null && generationError === null) {
+      handleGeneratePuzzle(settings)
+    }
+  }, [])
+
+  useEffect(() => {
+    setPersistedState({
+      version: 1,
+      settings,
+      puzzle,
+      solutionsVisible,
+      generationError,
+    })
+  }, [settings, puzzle, solutionsVisible, generationError, setPersistedState])
 
   function handleGeneratePuzzle(settings: PuzzleSettings) {
     setIsGenerating(true)
@@ -130,6 +169,36 @@ export default function App() {
       />
     </main>
   )
+}
+
+function isValidSettings(value: unknown): value is PuzzleSettings {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+  return Number.isInteger(v.target) && Number.isInteger(v.min) && Number.isInteger(v.max)
+}
+
+function isValidPuzzle(value: unknown): value is GeneratedPuzzle {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+  return (
+    Array.isArray(v.numbers) &&
+    v.numbers.every((n) => typeof n === 'number' && Number.isFinite(n)) &&
+    Array.isArray(v.solutions) &&
+    v.solutions.every((s) => typeof s === 'string')
+  )
+}
+
+function isPersistedAppState(value: unknown): value is PersistedAppState {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+
+  if (v.version !== 1) return false
+  if (!isValidSettings(v.settings)) return false
+  if (v.puzzle !== null && !isValidPuzzle(v.puzzle)) return false
+  if (typeof v.solutionsVisible !== 'boolean') return false
+  if (v.generationError !== null && typeof v.generationError !== 'string') return false
+
+  return true
 }
 
 function getErrorMessage(error: unknown): string {
