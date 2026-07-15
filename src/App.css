@@ -25,9 +25,6 @@
   font-weight: 700;
   cursor: pointer;
 }
-.options-trigger:hover {
-  background: var(--panel-bg-hover);
-}
 
 .credits {
   position: fixed;
@@ -104,16 +101,10 @@
   font-weight: 700;
   cursor: pointer;
 }
-.share-action:hover:not(:disabled) {
-  background: var(--panel-bg-hover);
-}
 
 .primary-action {
   color: #ffffff;
   background: var(--accent);
-}
-.primary-action:hover:not(:disabled) {
-  background: var(--accent-hover);
 }
 
 .secondary-action {
@@ -121,8 +112,41 @@
   background: var(--panel-bg);
   border-color: var(--border);
 }
-.secondary-action:hover:not(:disabled) {
-  background: var(--panel-bg-hover);
+
+@media (hover: hover) and (pointer: fine) {
+  .options-trigger:hover {
+    background: var(--panel-bg-hover);
+  }
+
+  .share-action:hover:not(:disabled) {
+    background: var(--panel-bg-hover);
+  }
+
+  .primary-action:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+
+  .secondary-action:hover:not(:disabled) {
+    background: var(--panel-bg-hover);
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .options-trigger:active {
+    background: var(--panel-bg-hover);
+  }
+
+  .share-action:active:not(:disabled) {
+    background: var(--panel-bg-hover);
+  }
+
+  .primary-action:active:not(:disabled) {
+    background: var(--accent-hover);
+  }
+
+  .secondary-action:active:not(:disabled) {
+    background: var(--panel-bg-hover);
+  }
 }
 
 .primary-action:disabled,
