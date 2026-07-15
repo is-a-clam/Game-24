@@ -1,18 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { IoSettings } from 'react-icons/io5'
+import { FaShareSquare } from 'react-icons/fa'
 import './App.css'
-import { generatePuzzle, type GeneratedPuzzle } from './generate'
+import { createPuzzleSeed, generatePuzzle, type GeneratedPuzzle } from './generate'
 import Settings, { type PuzzleSettings } from './Settings.tsx'
 import { usePersistentState } from './storage.ts'
 
-const APP_STATE_KEY = 'game24:app-state:v1'
+const APP_STATE_KEY = 'game24:app-state:v2'
 
 type PersistedAppState = {
-  version: 1
+  version: 2
   settings: PuzzleSettings
-  puzzle: GeneratedPuzzle | null
-  solutionsVisible: boolean
-  generationError: string | null
+  seed: string | null
 }
 
 const DEFAULT_SETTINGS: PuzzleSettings = {
@@ -22,11 +21,9 @@ const DEFAULT_SETTINGS: PuzzleSettings = {
 }
 
 const DEFAULT_PERSISTED_STATE: PersistedAppState = {
-  version: 1,
+  version: 2,
   settings: DEFAULT_SETTINGS,
-  puzzle: null,
-  solutionsVisible: false,
-  generationError: null,
+  seed: null,
 }
 
 export default function App() {
@@ -37,35 +34,69 @@ export default function App() {
   )
 
   const optionsButtonRef = useRef<HTMLButtonElement | null>(null)
-  const [puzzle, setPuzzle] = useState<GeneratedPuzzle | null>(persistedState.puzzle)
-  const [solutionsVisible, setSolutionsVisible] = useState(persistedState.solutionsVisible)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generationError, setGenerationError] = useState<string | null>(persistedState.generationError)
 
   const [settings, setSettings] = useState<PuzzleSettings>(persistedState.settings)
+  const [seed, setSeed] = useState<string | null>(persistedState.seed)
+  const [puzzle, setPuzzle] = useState<GeneratedPuzzle | null>(null)
+  const [solutionsVisible, setSolutionsVisible] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationError, setGenerationError] = useState<string | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    if (puzzle === null && generationError === null) {
-      handleGeneratePuzzle(settings)
+    const params = new URLSearchParams(window.location.search)
+    const target = params.get('target')
+    const min = params.get('min')
+    const max = params.get('max')
+    if (target !== null && min !== null && max !== null) {
+      const settingsFromURL = {
+        target: parseInt(target),
+        min: parseInt(min),
+        max: parseInt(max),
+      }
+      if (isValidSettings(settingsFromURL)) {
+        setSettings(settingsFromURL)
+      }
+    }
+
+    const seedFromURL = params.get('seed')
+    console.log('startup seed: ' + seedFromURL)
+    if (seedFromURL !== null) {
+      setSeed(seedFromURL)
+    } else if (seed === null) {
+      setSeed(createPuzzleSeed())
     }
   }, [])
 
   useEffect(() => {
-    setPersistedState({
-      version: 1,
-      settings,
-      puzzle,
-      solutionsVisible,
-      generationError,
-    })
-  }, [settings, puzzle, solutionsVisible, generationError, setPersistedState])
+    if (seed !== null) {
+      handleGeneratePuzzle(settings, seed)
+    }
+  }, [settings, seed])
 
-  function handleGeneratePuzzle(settings: PuzzleSettings) {
+  useEffect(() => {
+    if (toastMessage === null) {
+      return
+    }
+
+    const timeout = window.setTimeout(() => setToastMessage(null), 1500)
+    return () => window.clearTimeout(timeout)
+  }, [toastMessage])
+
+  useEffect(() => {
+    setPersistedState({
+      version: 2,
+      settings,
+      seed,
+    })
+  }, [settings, seed, setPersistedState])
+
+  function handleGeneratePuzzle(settings: PuzzleSettings, seed: string) {
     setIsGenerating(true)
 
     try {
-      const nextPuzzle = generatePuzzle(settings)
+      const nextPuzzle = generatePuzzle({ ...settings, seed: seed })
 
       setPuzzle(nextPuzzle)
       setSolutionsVisible(false)
@@ -87,6 +118,30 @@ export default function App() {
     setIsSettingsOpen(false)
     // return focus to the options trigger for keyboard users
     requestAnimationFrame(() => optionsButtonRef.current?.focus())
+  }
+
+  async function handleSharePuzzle() {
+    try {
+      const shareURL = getShareURL().toString()
+      await navigator.clipboard.writeText(shareURL)
+      setToastMessage('Puzzle link added to clipboard')
+    } catch {
+      setToastMessage('Could not add puzzle link to clipboard')
+    }
+  }
+
+  function getShareURL() {
+    if (seed === null) {
+      throw new Error('Attempting to share non-existent puzzle')
+    }
+
+    const url = new URL(window.location.href)
+    url.searchParams.set('target', String(settings.target))
+    url.searchParams.set('min', String(settings.min))
+    url.searchParams.set('max', String(settings.max))
+    url.searchParams.set('seed', seed)
+
+    return url
   }
 
   return (
@@ -119,7 +174,7 @@ export default function App() {
           <button
             className='primary-action'
             type='button'
-            onClick={() => handleGeneratePuzzle(settings)}
+            onClick={() => setSeed(createPuzzleSeed())}
             disabled={isGenerating}
           >
             {isGenerating ? 'Generating...' : 'Generate'}
@@ -135,12 +190,29 @@ export default function App() {
           >
             {solutionsVisible ? 'Hide Solution' : 'Reveal Solution'}
           </button>
+
+          <button
+            className='share-action'
+            type='button'
+            onClick={handleSharePuzzle}
+            disabled={puzzle === null || isGenerating}
+            aria-label='Copy share link'
+            title='Copy share link'
+          >
+            <FaShareSquare />
+          </button>
         </div>
 
         {generationError !== null && (
           <p className='generation-error' role='alert'>
             {generationError}
           </p>
+        )}
+
+        {toastMessage !== null && (
+          <div className='toast' role='status' aria-live='polite'>
+            {toastMessage}
+          </div>
         )}
 
         {solutionsVisible && (
@@ -163,7 +235,6 @@ export default function App() {
         settings={settings}
         setSettings={(newSettings) => {
           setSettings(newSettings)
-          handleGeneratePuzzle(newSettings)
         }}
         isGenerating={isGenerating}
       />
@@ -177,27 +248,13 @@ function isValidSettings(value: unknown): value is PuzzleSettings {
   return Number.isInteger(v.target) && Number.isInteger(v.min) && Number.isInteger(v.max)
 }
 
-function isValidPuzzle(value: unknown): value is GeneratedPuzzle {
-  if (typeof value !== 'object' || value === null) return false
-  const v = value as Record<string, unknown>
-  return (
-    Array.isArray(v.numbers) &&
-    v.numbers.every((n) => typeof n === 'number' && Number.isFinite(n)) &&
-    Array.isArray(v.solutions) &&
-    v.solutions.every((s) => typeof s === 'string')
-  )
-}
-
 function isPersistedAppState(value: unknown): value is PersistedAppState {
   if (typeof value !== 'object' || value === null) return false
   const v = value as Record<string, unknown>
 
-  if (v.version !== 1) return false
+  if (v.version !== 2) return false
   if (!isValidSettings(v.settings)) return false
-  if (v.puzzle !== null && !isValidPuzzle(v.puzzle)) return false
-  if (typeof v.solutionsVisible !== 'boolean') return false
-  if (v.generationError !== null && typeof v.generationError !== 'string') return false
-
+  if (v.seed !== null && typeof v.seed !== 'string') return false
   return true
 }
 
